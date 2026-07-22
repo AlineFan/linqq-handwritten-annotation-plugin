@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.10 - 2026-07-22
+
+- Keep `styles.css` below the Obsidian Sync Standard 5 MB file limit by embedding a common Simplified Chinese subset of LXGW WenKai Lite.
+- Add a lockfile, lockfile-based CI installs, rerunnable releases, and signed GitHub artifact attestations for reproducible, verifiable releases.
+- Expand the hover underline shorthand into explicit CSS properties for clearer compatibility checks.
+- Include the revised product-only README.
+
 ## 0.6.9 - 2026-07-22
 
 - Make the community release self-contained by embedding both handwriting fonts in `styles.css`.

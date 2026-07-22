@@ -50,7 +50,7 @@ Enable **linqq-handwritten annotation** in Obsidian.
 
 ## Development
 
-`styles.css` is a generated, self-contained release asset. The two OFL fonts are embedded so a normal Community Plugins installation does not depend on extra font files.
+`styles.css` is a generated, self-contained release asset. It embeds Shantell Sans and a GB2312 common-character subset of LXGW WenKai Lite, so a normal Community Plugins installation does not depend on extra font files. Chinese characters outside the subset use the system handwriting-font fallback.
 
 ```bash
 npm run build

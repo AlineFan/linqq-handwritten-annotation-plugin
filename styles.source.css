@@ -221,7 +221,9 @@ button.va-rail-note {
   color: var(--va-color);
   background: transparent !important;
   box-shadow: none !important;
-  text-decoration: underline wavy color-mix(in srgb, var(--va-color) 55%, transparent);
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: color-mix(in srgb, var(--va-color) 55%, transparent);
   text-underline-offset: 0.28rem;
 }
 
