@@ -1,0 +1,398 @@
+.va-annotation {
+  --va-color: #3979cf;
+  --va-bg: rgba(57, 121, 207, 0.13);
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border-radius: 4px;
+  background: var(--va-bg);
+  box-shadow:
+    -0.22em 0 0 var(--va-bg),
+    0.22em 0 0 var(--va-bg),
+    0 0 0 1px var(--va-bg);
+  line-height: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.va-annotation.va-interactive {
+  cursor: pointer;
+  transition: box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.va-annotation.va-interactive:hover,
+.va-annotation.is-selected {
+  box-shadow:
+    -0.22em 0 0 var(--va-bg),
+    0.22em 0 0 var(--va-bg),
+    0 0 0 2px var(--va-color),
+    0 0 0 5px color-mix(in srgb, var(--va-color) 15%, transparent);
+}
+
+.va-annotation:focus-visible {
+  outline: 2px solid var(--va-color);
+  outline-offset: 4px;
+}
+
+.va-color-amber {
+  --va-color: #c47a24;
+  --va-bg: rgba(196, 122, 36, 0.13);
+}
+
+.va-color-blue {
+  --va-color: #3979cf;
+  --va-bg: rgba(57, 121, 207, 0.13);
+}
+
+.va-color-green {
+  --va-color: #329767;
+  --va-bg: rgba(50, 151, 103, 0.13);
+}
+
+.va-color-red {
+  --va-color: #d45d39;
+  --va-bg: rgba(212, 93, 57, 0.13);
+}
+
+.va-color-purple {
+  --va-color: #8751bd;
+  --va-bg: rgba(135, 81, 189, 0.13);
+}
+
+/* mdtask-style handwriting, while the rail remains a real block in document
+   flow so labels never cover prose or change the prose's line wrapping. */
+.va-annotation-rail {
+  display: block !important;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 4.65rem;
+  margin: 0 0 0.2rem;
+  padding: 0.15rem 0.7rem 0;
+  border: 0;
+  color: var(--text-normal);
+  background: transparent;
+  font-size: 1rem;
+  line-height: 1;
+  white-space: normal;
+  position: relative;
+  clear: both;
+}
+
+.va-editor-rail {
+  margin-block: 0.2rem;
+}
+
+.va-reading-rail {
+  margin-block: 0.1rem;
+}
+
+.va-annotation-rail.va-side-top {
+  margin-bottom: 0.2rem;
+}
+
+.va-annotation-rail.va-side-bottom {
+  margin-top: 0.2rem;
+  margin-bottom: 0.35rem;
+}
+
+.va-rail-item {
+  position: absolute;
+  inset-inline: 0;
+  top: var(--va-lane-y, 0);
+  display: grid;
+  grid-template-columns: 100%;
+  align-items: start;
+  justify-items: start;
+  min-width: 4.75rem;
+  max-width: 100%;
+  min-height: 4.25rem;
+  padding: 0;
+  border: 0;
+  color: var(--va-color);
+  background: transparent;
+  width: 100%;
+  transform: none;
+}
+
+.va-rail-arrow {
+  display: block;
+  width: 46px;
+  height: var(--va-arrow-length, 38px);
+  margin-top: -0.1rem;
+  background: var(--va-color);
+  opacity: 0.92;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg width='46' height='38' viewBox='0 0 46 38' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M23 4 C22 13 22 24 23 35' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Cpath d='M17 29 L23 36 L29 29' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+  mask-image: url("data:image/svg+xml,%3Csvg width='46' height='38' viewBox='0 0 46 38' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M23 4 C22 13 22 24 23 35' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Cpath d='M17 29 L23 36 L29 29' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  justify-self: center;
+  margin: -0.1rem 0 0 !important;
+  transform: translateX(var(--va-arrow-shift, 0));
+  pointer-events: none;
+}
+
+.va-side-top .va-rail-note-text {
+  grid-row: 1;
+}
+
+.va-side-top .va-rail-arrow {
+  grid-row: 2;
+}
+
+.va-side-bottom button.va-rail-note {
+  grid-template-rows: var(--va-arrow-length, 38px) auto;
+}
+
+.va-side-bottom .va-rail-note-text {
+  grid-row: 2;
+}
+
+.va-side-bottom .va-rail-arrow {
+  grid-row: 1;
+  margin: 0 0 -0.1rem !important;
+  transform: translateX(var(--va-arrow-shift, 0)) rotate(180deg);
+}
+
+.va-rail-item.is-selected {
+  z-index: 3;
+}
+
+.va-rail-action {
+  min-width: auto;
+  height: 1.5rem;
+  margin: 0;
+  padding: 0 0.35rem;
+  border: 0;
+  border-radius: 5px;
+  box-shadow: none;
+  line-height: 1;
+}
+
+button.va-rail-note {
+  appearance: none;
+  position: relative;
+  left: var(--va-marker-x, 50%);
+  display: inline-grid;
+  grid-template-rows: auto var(--va-arrow-length, 38px);
+  align-items: center;
+  justify-items: center;
+  justify-self: start;
+  overflow: visible;
+  width: max-content;
+  max-width: min(30rem, 100%);
+  height: auto;
+  min-height: 4.25rem;
+  margin: 0 !important;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  color: var(--va-color) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  line-height: 1;
+  white-space: normal;
+  transform: translate(-50%, var(--va-connector-offset, 0px));
+}
+
+.va-rail-note-text {
+  display: block;
+  max-width: 100%;
+  color: var(--va-color);
+  font-family: "VA Shantell Sans", "Shantell Sans", "VA LXGW WenKai Lite", "Kaiti SC", "STKaiti", "KaiTi", cursive;
+  font-size: 1rem;
+  font-weight: 400;
+  font-synthesis: none;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-align: center;
+  text-overflow: clip;
+  white-space: normal;
+  opacity: 0.94;
+  transform: rotate(var(--va-rotate, -3deg));
+  transform-origin: 50% 70%;
+}
+
+.va-rail-note:hover .va-rail-note-text,
+.va-rail-note:focus .va-rail-note-text {
+  color: var(--va-color);
+  background: transparent !important;
+  box-shadow: none !important;
+  text-decoration: underline wavy color-mix(in srgb, var(--va-color) 55%, transparent);
+  text-underline-offset: 0.28rem;
+}
+
+.va-rail-actions {
+  display: none;
+  position: absolute;
+  top: -0.35rem;
+  left: var(--va-marker-x, 50%);
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  background: var(--background-primary);
+  box-shadow: var(--shadow-s);
+  transform: translateX(1.5rem);
+}
+
+.va-side-bottom .va-rail-actions {
+  top: 2.1rem;
+}
+
+.va-rail-item.is-selected .va-rail-actions {
+  display: inline-flex;
+}
+
+.va-rail-action {
+  height: 1.45rem;
+  padding: 0 0.35rem;
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+  font-size: var(--font-ui-smaller);
+}
+
+.va-rail-action:hover {
+  color: var(--text-on-accent);
+  background: var(--interactive-accent);
+}
+
+.va-rail-delete:hover {
+  background: var(--text-error);
+}
+
+.modal.va-modal-shell {
+  width: min(52rem, calc(100vw - 3rem));
+  max-width: calc(100vw - 3rem);
+}
+
+.va-modal {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  padding-top: 0.35rem;
+  overflow-x: hidden;
+}
+
+.va-modal h2 {
+  margin: 0 0 1.25rem;
+}
+
+.va-note-field label,
+.va-field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  font-weight: 650;
+}
+
+.va-note-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 0.75rem 0.9rem;
+  border: 2px solid var(--interactive-accent);
+  border-radius: 10px;
+  background: var(--background-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--interactive-accent) 13%, transparent);
+  font-size: 1.05rem;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.va-note-input:focus {
+  border-color: var(--interactive-accent-hover);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+}
+
+.va-color-section {
+  margin-top: 1.35rem;
+}
+
+.va-color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.va-color-choice {
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  min-width: 2.6rem;
+  padding: 0;
+  place-items: center;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.va-color-choice:hover {
+  background: var(--background-modifier-hover);
+}
+
+.va-color-choice.is-selected {
+  border-color: var(--va-color);
+  background: color-mix(in srgb, var(--va-color) 10%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--va-color) 16%, transparent);
+}
+
+.va-color-swatch {
+  display: block;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: 2px solid color-mix(in srgb, var(--va-color) 70%, white);
+  border-radius: 999px;
+  background: var(--va-color);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
+.va-selected-text {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 1.35rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 8px;
+  background: var(--background-secondary);
+  font-size: var(--font-ui-small);
+}
+
+.va-selected-text-label {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.va-selected-text-value {
+  min-width: 0;
+  color: var(--text-normal);
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.va-auto-position-hint {
+  margin-top: 0.7rem;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.va-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+@media (max-width: 700px) {
+  .modal.va-modal-shell {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+  }
+}

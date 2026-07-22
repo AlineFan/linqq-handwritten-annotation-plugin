@@ -1,0 +1,12 @@
+{
+  "name": "linqq-handwritten-annotation-plugin",
+  "version": "0.6.9",
+  "private": true,
+  "description": "Source and release tooling for the linqq handwritten annotation Obsidian plugin.",
+  "scripts": {
+    "build": "node scripts/build-styles.js",
+    "test": "node --check main.js && node --test test/core.test.js test/runtime-load.test.js test/ui-regression.test.js",
+    "verify": "node scripts/verify-release.js"
+  },
+  "license": "MIT"
+}

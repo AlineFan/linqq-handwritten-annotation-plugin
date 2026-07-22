@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 64px 24px; background: #faf7f2; color: #56391f; }
+    main { width: min(900px, 100%); margin: 0 auto; font: 24px/1.45 system-ui, sans-serif; }
+    p { margin: 0 0 30px; }
+    button { font: inherit; }
+    .probe { outline: 1px dashed rgba(0, 0, 0, 0.08); }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="probe" id="english">
+      <span class="va-annotation-rail va-editor-rail">
+        <span class="va-rail-item va-color-red" data-va-id="target-en" data-va-anchor-ratio="0.5">
+          <button class="va-rail-note"><span class="va-rail-note-text">taste</span><span class="va-rail-arrow"></span></button><span class="va-rail-actions"></span>
+        </span>
+      </span>
+      What AI did is, it raised the floor dramatically. It also raised the ceiling, but not as much as the floor. This somewhat <span id="target-en" class="va-annotation va-color-red">compresses the skill relevance gradient</span>, but it doesn't eliminate it in any meaningful way.
+    </p>
+    <p class="probe" id="chinese">
+      <span class="va-annotation-rail va-editor-rail va-side-top" data-va-placement="top">
+        <span class="va-rail-item va-color-purple" data-va-id="target-cn-1" data-va-anchor-ratio="0.18">
+          <button class="va-rail-note"><span class="va-rail-note-text">倍数，甚至是指数</span><span class="va-rail-arrow"></span></button><span class="va-rail-actions"></span>
+        </span>
+        <span class="va-rail-item va-color-amber" data-va-id="target-cn-2" data-va-anchor-ratio="0.45">
+          <button class="va-rail-note"><span class="va-rail-note-text">构建门槛几乎为 0</span><span class="va-rail-arrow"></span></button><span class="va-rail-actions"></span>
+        </span>
+      </span>
+      <span id="target-cn-1" class="va-annotation va-color-purple">AI 是放大器，但不是替代品</span>。<span id="target-cn-2" class="va-annotation va-color-amber">AI 能复制出一个 app</span>，<span id="target-cn-3" class="va-annotation va-color-blue">但无法复制用户的数据库、云端的专有数据、用户的信任度、各种集成功能以及其它类似的内容</span>。
+      <span class="va-annotation-rail va-editor-rail va-side-bottom" data-va-placement="bottom">
+        <span class="va-rail-item va-color-blue" data-va-id="target-cn-3" data-va-anchor-ratio="0.78">
+          <button class="va-rail-note"><span class="va-rail-note-text">it doesn't copy its user base, proprietary data in the cloud, its trust, its integrations or anything like that.</span><span class="va-rail-arrow"></span></button><span class="va-rail-actions"></span>
+        </span>
+      </span>
+    </p>
+  </main>
+  <script>
+    function layoutRail(rail) {
+      const railRect = rail.getBoundingClientRect();
+      const isTop = rail.dataset.vaPlacement !== 'bottom';
+      const entries = Array.from(rail.querySelectorAll('.va-rail-item')).map((item) => {
+        const itemRect = item.getBoundingClientRect();
+        const target = document.getElementById(item.dataset.vaId);
+        const rects = Array.from(target.getClientRects());
+        const targetRect = (isTop ? rects[0] : rects[rects.length - 1]) || target.getBoundingClientRect();
+        const desiredX = targetRect.left + targetRect.width / 2 - itemRect.left;
+        const marker = item.querySelector('.va-rail-note');
+        const markerWidth = Math.min(marker.getBoundingClientRect().width, itemRect.width);
+        const markerX = Math.max(markerWidth / 2, Math.min(itemRect.width - markerWidth / 2, desiredX));
+        return { item, markerX, arrowShift: desiredX - markerX, left: markerX - markerWidth / 2, right: markerX + markerWidth / 2, height: Math.max(itemRect.height, 68) };
+      });
+      entries.sort((a, b) => a.left - b.left);
+      const laneEnds = [];
+      for (const entry of entries) {
+        let lane = laneEnds.findIndex((right) => entry.left >= right + 20);
+        if (lane === -1) lane = laneEnds.length;
+        laneEnds[lane] = entry.right;
+        entry.lane = lane;
+      }
+      const laneCount = Math.max(laneEnds.length, 1);
+      const laneHeight = Math.max(72, ...entries.map((entry) => entry.height + 4));
+      const railHeight = laneCount * laneHeight;
+      rail.style.height = `${railHeight}px`;
+      rail.style.minHeight = `${railHeight}px`;
+      for (const entry of entries) {
+        const displayLane = isTop ? laneCount - 1 - entry.lane : entry.lane;
+        const connectorExtra = isTop ? (laneCount - 1 - displayLane) * laneHeight : displayLane * laneHeight;
+        entry.item.style.setProperty('--va-marker-x', `${entry.markerX}px`);
+        entry.item.style.setProperty('--va-arrow-shift', `${entry.arrowShift}px`);
+        entry.item.style.setProperty('--va-arrow-length', `${38 + connectorExtra}px`);
+        entry.item.style.setProperty('--va-connector-offset', `${isTop ? 0 : -connectorExtra}px`);
+        entry.item.style.setProperty('--va-lane-y', `${displayLane * laneHeight}px`);
+      }
+    }
+    document.fonts.ready.then(() => document.querySelectorAll('.va-annotation-rail').forEach(layoutRail));
+  </script>
+</body>
+</html>

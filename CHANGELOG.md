@@ -1,0 +1,50 @@
+# Changelog
+
+## 0.6.9 - 2026-07-22
+
+- Make the community release self-contained by embedding both handwriting fonts in `styles.css`.
+- Add a public release workflow, release validation, version metadata, and an MIT license for the plugin code.
+- Update the community directory description to follow Obsidian's submission requirements.
+- Remove the unnecessary single-section settings heading to follow Obsidian's UI guidelines.
+
+## 0.6.8 - 2026-07-22
+
+- Reduce the arrow-tip gap beside annotated prose from about 23px to 16px.
+- Group earlier automatic annotations above the prose and later ones below it, instead of alternating sides mechanically.
+- Extend arrows through additional collision lanes and anchor bottom annotations to the target's last rendered line.
+- Keep the original arrow path and non-overlapping document flow unchanged.
+
+## 0.6.7 - 2026-07-22
+
+- Shorten the plugin-list description to `add colorful handwritten-style annotations`.
+- Clarify that mdtask.dev provided visual inspiration only; this is an independent, unaffiliated project with no integration or functional dependency.
+
+## 0.6.6 - 2026-07-22
+
+- Rename the user-visible plugin name to `linqq-handwritten annotation`.
+- Preserve the internal plugin ID `visual-annotations` for backward compatibility.
+- Migrate the project into the governed Desktop workspace with session records and artifacts.
+
+## 0.6.5 - 2026-07-22
+
+- Distribute automatic annotations above and below the annotated text.
+- Pack non-overlapping annotations into a shared horizontal lane.
+- Add collision lanes only when labels actually intersect.
+- Recalculate positions when the rail width changes.
+
+## 0.6.4 - 2026-07-22
+
+- Replace the guessed arrow with the exact mdtask.dev SVG path.
+
+## 0.6.3 - 2026-07-22
+
+- Experimental curved arrow. Superseded because it introduced an unwanted S-shaped shaft.
+
+## 0.6.2 - 2026-07-22
+
+- Keep handwritten text and its arrow in one marker component so they move together.
+
+## Earlier iterations
+
+- Added editable and removable Markdown annotations.
+- Added color selection, bundled Shantell Sans and LXGW WenKai Lite fonts, and non-overlapping document-flow rails.
