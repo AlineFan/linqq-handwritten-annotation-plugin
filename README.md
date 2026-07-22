@@ -4,8 +4,6 @@ Add colorful handwritten-style annotations to Obsidian notes without covering or
 
 The plugin places handwritten labels in dedicated layout rails above and below a paragraph. Natural curved arrows remain connected to the selected text, including when labels need additional collision lanes or the target wraps across multiple lines.
 
-The visual treatment was inspired by the explanatory graphics on mdtask.dev. This project is independent and is not affiliated with, integrated with, or functionally dependent on mdtask.
-
 ## Features
 
 - Add an annotation to selected Markdown text.
