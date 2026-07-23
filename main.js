@@ -163,15 +163,17 @@ function distributeAnnotations(annotations) {
       Number(a.anchorRatio ?? 0.5) - Number(b.anchorRatio ?? 0.5) ||
       Number(a.start ?? 0) - Number(b.start ?? 0)
   );
-  const automatic = ordered.filter(
+  const unmeasuredAutomatic = ordered.filter(
     (annotation) =>
       annotation.placement !== "top" &&
       annotation.placement !== "left" &&
       annotation.placement !== "bottom" &&
-      annotation.placement !== "right"
+      annotation.placement !== "right" &&
+      annotation.preferredSide !== "top" &&
+      annotation.preferredSide !== "bottom"
   );
-  const topAutomaticCount = Math.ceil(automatic.length / 2);
-  let automaticIndex = 0;
+  const topUnmeasuredCount = Math.ceil(unmeasuredAutomatic.length / 2);
+  let unmeasuredIndex = 0;
 
   for (const annotation of ordered) {
     let side;
@@ -179,9 +181,11 @@ function distributeAnnotations(annotations) {
       side = "top";
     } else if (annotation.placement === "bottom" || annotation.placement === "right") {
       side = "bottom";
+    } else if (annotation.preferredSide === "top" || annotation.preferredSide === "bottom") {
+      side = annotation.preferredSide;
     } else {
-      side = automaticIndex < topAutomaticCount ? "top" : "bottom";
-      automaticIndex += 1;
+      side = unmeasuredIndex < topUnmeasuredCount ? "top" : "bottom";
+      unmeasuredIndex += 1;
     }
     distributed[side].push(annotation);
   }
@@ -243,6 +247,7 @@ function buildEditorRailDecorations(state, plugin) {
     const annotation = annotationFromMatch(match);
     const line = state.doc.lineAt(annotation.start);
     annotation.anchorRatio = annotationAnchorOnLine(source, line, annotation);
+    annotation.preferredSide = annotation.anchorRatio <= 0.5 ? "top" : "bottom";
     if (!grouped.has(line.from)) grouped.set(line.from, { line, annotations: [] });
     grouped.get(line.from).annotations.push(annotation);
   }
@@ -653,34 +658,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
     }
 
     for (const [container, items] of grouped) {
-      const railItems = items.map((annotation) => ({
-        ...identityFromElement(annotation),
-        targetElement: annotation,
-        anchorRatio: this.measureRenderedTarget(annotation, container.getBoundingClientRect())
-      }));
-      const distributed = distributeAnnotations(railItems);
-      if (distributed.top.length) {
-        container.prepend(
-          this.createAnnotationRail(
-            distributed.top,
-            context.sourcePath,
-            container.ownerDocument,
-            "reading",
-            "top"
-          )
-        );
-      }
-      if (distributed.bottom.length) {
-        container.append(
-          this.createAnnotationRail(
-            distributed.bottom,
-            context.sourcePath,
-            container.ownerDocument,
-            "reading",
-            "bottom"
-          )
-        );
-      }
+      this.scheduleRenderedAnnotationRails(container, items, context.sourcePath);
       for (const annotation of items) {
         annotation.addClass("va-interactive");
         annotation.setAttribute("role", "button");
@@ -704,14 +682,64 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
     }
   }
 
+  scheduleRenderedAnnotationRails(container, items, sourcePath) {
+    const doc = container.ownerDocument;
+    const view = doc.defaultView;
+    const render = () => {
+      if (container.isConnected === false) return;
+      Array.from(container.children || [])
+        .filter((child) => child.classList.contains("va-reading-rail"))
+        .forEach((rail) => rail.remove());
+
+      const containerRect = container.getBoundingClientRect();
+      const railItems = items.map((annotation) => ({
+        ...identityFromElement(annotation),
+        targetElement: annotation,
+        ...this.measureRenderedTarget(annotation, containerRect)
+      }));
+      const distributed = distributeAnnotations(railItems);
+      if (distributed.top.length) {
+        container.prepend(
+          this.createAnnotationRail(distributed.top, sourcePath, doc, "reading", "top")
+        );
+      }
+      if (distributed.bottom.length) {
+        container.append(
+          this.createAnnotationRail(distributed.bottom, sourcePath, doc, "reading", "bottom")
+        );
+      }
+    };
+
+    if (view && typeof view.requestAnimationFrame === "function") {
+      view.requestAnimationFrame(render);
+    } else {
+      setTimeout(render, 0);
+    }
+  }
+
   measureRenderedTarget(annotation, containerRect) {
     const rects = Array.from(annotation.getClientRects());
     const first = rects[0] || annotation.getBoundingClientRect();
+    const last = rects[rects.length - 1] || first;
     const width = Math.max(containerRect.width, 1);
-    return Math.max(
+    const anchorRatio = Math.max(
       0.02,
       Math.min(0.98, (first.left + first.width / 2 - containerRect.left) / width)
     );
+    const containerTop = Number(containerRect.top) || 0;
+    const containerBottom =
+      Number.isFinite(containerRect.bottom)
+        ? containerRect.bottom
+        : containerTop + (Number(containerRect.height) || 0);
+    const firstTop = Number(first.top) || 0;
+    const lastBottom =
+      Number.isFinite(last.bottom) ? last.bottom : (Number(last.top) || 0) + (Number(last.height) || 0);
+    const topDistance = Math.max(0, firstTop - containerTop);
+    const bottomDistance = Math.max(0, containerBottom - lastBottom);
+    return {
+      anchorRatio,
+      preferredSide: topDistance <= bottomDistance ? "top" : "bottom"
+    };
   }
 
   createAnnotationRail(annotations, sourcePath, doc, mode, placement = "top") {

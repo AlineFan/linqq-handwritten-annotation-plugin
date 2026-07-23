@@ -26,6 +26,9 @@ assert.ok(manifest.description.length <= 250);
 assert.match(styles, /font-family: "VA Shantell Sans"/);
 assert.match(styles, /font-family: "VA LXGW WenKai Lite"/);
 assert.equal((styles.match(/data:font\/woff2;base64,/g) || []).length, 2);
+assert.doesNotMatch(styles, /(?:-webkit-)?box-decoration-break\s*:/);
+assert.doesNotMatch(styles, /text-decoration(?:-[a-z-]+)?\s*:/);
+assert.doesNotMatch(styles, /!important/);
 assert.ok(
   fs.statSync("styles.css").size < maxSyncStandardFileSize,
   `styles.css must stay below the Obsidian Sync Standard 5 MB limit; got ${fs.statSync("styles.css").size} bytes`

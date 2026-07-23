@@ -97,6 +97,30 @@ async function run() {
     await plugin.onload();
     assert.equal(plugin.commands.length, 3);
     assert.equal(plugin.editorExtensions.length, 1);
+
+    const containerRect = { left: 100, top: 200, right: 900, bottom: 260, width: 800, height: 60 };
+    const firstLineMetrics = plugin.measureRenderedTarget(
+      {
+        getClientRects() {
+          return [{ left: 180, top: 200, right: 300, bottom: 220, width: 120, height: 20 }];
+        }
+      },
+      containerRect
+    );
+    assert.equal(firstLineMetrics.preferredSide, "top");
+    assert.equal(firstLineMetrics.anchorRatio, 0.175);
+
+    const finalLineMetrics = plugin.measureRenderedTarget(
+      {
+        getClientRects() {
+          return [{ left: 620, top: 240, right: 780, bottom: 260, width: 160, height: 20 }];
+        }
+      },
+      containerRect
+    );
+    assert.equal(finalLineMetrics.preferredSide, "bottom");
+    assert.equal(finalLineMetrics.anchorRatio, 0.75);
+
     const stateFieldExtension = plugin.editorExtensions[0][0];
     const annotatedSource =
       '<span class="va-annotation va-color-blue va-place-auto" data-va-note="测试" data-va-id="va-test">正文</span>';
@@ -128,6 +152,44 @@ async function run() {
     assert.equal(splitDecorations.items[1].position, splitSource.length);
     assert.equal(splitDecorations.items[1].config.widget.placement, "bottom");
     assert.equal(splitDecorations.items[1].config.widget.annotations[0].id, "va-late");
+
+    const firstLineOne =
+      '<span class="va-annotation va-color-amber va-place-auto" data-va-note="注释1" data-va-id="va-first-1">The plugin places handwritten labels in</span>';
+    const firstLineTwo =
+      '<span class="va-annotation va-color-blue va-place-auto" data-va-note="注释2" data-va-id="va-first-2">dedicated layout rails above and</span>';
+    const sameFirstLineSource =
+      `${firstLineOne} ${firstLineTwo} below a paragraph with enough trailing text to wrap across several visual lines.`;
+    const sameFirstLineDecorations = stateFieldExtension.spec.create({
+      doc: {
+        toString() { return sameFirstLineSource; },
+        lineAt() { return { from: 0, to: sameFirstLineSource.length }; }
+      },
+      field() { return { file: { path: "test.md" } }; }
+    });
+    assert.equal(sameFirstLineDecorations.items.length, 1);
+    assert.equal(sameFirstLineDecorations.items[0].config.widget.placement, "top");
+    assert.deepEqual(
+      sameFirstLineDecorations.items[0].config.widget.annotations.map(({ id }) => id),
+      ["va-first-1", "va-first-2"]
+    );
+
+    const finalLineTarget =
+      '<span class="va-annotation va-color-blue va-place-auto" data-va-note="末行" data-va-id="va-final-line">或者目标文本需要跨越多行显示时也是如此。</span>';
+    const finalLineSource =
+      `该插件会在段落上下方添加手写标签。这里有足够长的前置正文用于形成多行显示，${finalLineTarget}`;
+    const finalLineDecorations = stateFieldExtension.spec.create({
+      doc: {
+        toString() { return finalLineSource; },
+        lineAt() { return { from: 0, to: finalLineSource.length }; }
+      },
+      field() { return { file: { path: "test.md" } }; }
+    });
+    assert.equal(finalLineDecorations.items.length, 1);
+    assert.equal(finalLineDecorations.items[0].config.widget.placement, "bottom");
+    assert.equal(
+      finalLineDecorations.items[0].config.widget.annotations[0].id,
+      "va-final-line"
+    );
 
     const positionedStyles = new Map();
     const target = {
