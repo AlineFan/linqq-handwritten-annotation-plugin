@@ -2,6 +2,8 @@
 
 Add colorful handwritten-style annotations to Obsidian notes without covering or reflowing the annotated prose.
 
+![Colorful handwritten annotations displayed around English and Chinese text in Obsidian](https://raw.githubusercontent.com/AlineFan/linqq-handwritten-annotation-plugin/main/assets/linqq-handwritten-annotation-demo.png)
+
 The plugin places handwritten labels in dedicated layout rails above and below a paragraph. Natural curved arrows remain connected to the selected text, including when labels need additional collision lanes or the target wraps across multiple lines.
 
 ## Features
