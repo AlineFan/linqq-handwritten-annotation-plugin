@@ -12,14 +12,17 @@ const manifest = JSON.parse(
 
 assert.equal(manifest.name, "linqq-handwritten annotation");
 assert.equal(manifest.id, "visual-annotations");
-assert.equal(manifest.version, "0.6.10");
+assert.equal(manifest.version, "0.6.11");
 assert.equal(manifest.description, "Add colorful handwritten-style annotations.");
 assert.doesNotMatch(main, /linqq-handwritten annotation 设置/);
 assert.doesNotMatch(main, /containerEl\.createEl\("h[1-6]"/);
 
 assert.match(css, /\.modal\.va-modal-shell\s*\{[^}]*width:\s*min\(52rem,/s);
 assert.match(css, /\.va-note-input\s*\{[^}]*box-sizing:\s*border-box;/s);
-assert.match(css, /button\.va-rail-note\s*\{[^}]*white-space:\s*normal;/s);
+assert.match(
+  css,
+  /\.va-annotation-rail button\.va-rail-note\s*\{[^}]*white-space:\s*normal;/s
+);
 assert.match(css, /\.va-rail-note-text\s*\{[^}]*overflow-wrap:\s*anywhere;/s);
 assert.match(css, /\.va-rail-note-text\s*\{[^}]*VA LXGW WenKai Lite/s);
 assert.match(css, /font-family:\s*"VA Shantell Sans"/);
@@ -41,11 +44,20 @@ assert.match(main, /noteButton\.append\(noteText, arrow\)/);
 assert.match(main, /--va-marker-x/);
 assert.match(main, /--va-arrow-shift/);
 assert.doesNotMatch(main, /--va-arrow-x|--va-label-x/);
-assert.match(css, /\.va-annotation-rail\s*\{[^}]*display:\s*block\s*!important;/s);
+assert.match(
+  css,
+  /span\.va-annotation-rail\.va-editor-rail,[\s\S]*span\.va-annotation-rail\.va-reading-rail\s*\{[^}]*display:\s*block;/s
+);
+assert.doesNotMatch(css, /(?:-webkit-)?box-decoration-break\s*:/);
+assert.doesNotMatch(css, /text-decoration(?:-[a-z-]+)?\s*:/);
+assert.doesNotMatch(css, /!important/);
 assert.doesNotMatch(css, /\.va-annotation-rail\s*\{[^}]*flex-direction:\s*column;/s);
 assert.match(css, /\.va-rail-item\s*\{[^}]*position:\s*absolute;/s);
 assert.match(css, /\.va-rail-item\s*\{[^}]*top:\s*var\(--va-lane-y,/s);
-assert.match(css, /\.va-side-bottom \.va-rail-arrow\s*\{[^}]*rotate\(180deg\)/s);
+assert.match(
+  css,
+  /\.va-annotation-rail\.va-side-bottom \.va-rail-arrow\s*\{[^}]*rotate\(180deg\)/s
+);
 assert.match(main, /distributeAnnotations\(annotations\)/);
 assert.match(main, /container\.append\(/);
 assert.match(main, /rail\.style\.height = `\$\{railHeight\}px`/);

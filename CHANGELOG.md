@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.11 - 2026-07-23
+
+- Remove CSS features that the Obsidian review linter only partially supports.
+- Replace `!important` overrides with plugin-scoped selectors that retain the annotation rail, arrow, and button layout.
+- Add release checks that reject `box-decoration-break`, `text-decoration`, and `!important` before publishing.
+- Preserve wrapped highlights and use a subtle scale transition for annotation hover feedback.
+
 ## 0.6.10 - 2026-07-22
 
 - Keep `styles.css` below the Obsidian Sync Standard 5 MB file limit by embedding a common Simplified Chinese subset of LXGW WenKai Lite.

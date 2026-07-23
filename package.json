@@ -1,6 +1,6 @@
 {
   "name": "linqq-handwritten-annotation-plugin",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "private": true,
   "description": "Source and release tooling for the linqq handwritten annotation Obsidian plugin.",
   "scripts": {

@@ -11,8 +11,6 @@
     0.22em 0 0 var(--va-bg),
     0 0 0 1px var(--va-bg);
   line-height: inherit;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
 }
 
 .va-annotation.va-interactive {
@@ -59,10 +57,11 @@
   --va-bg: rgba(135, 81, 189, 0.13);
 }
 
-/* mdtask-style handwriting, while the rail remains a real block in document
-   flow so labels never cover prose or change the prose's line wrapping. */
-.va-annotation-rail {
-  display: block !important;
+/* The rail remains a real block in document flow so handwritten labels never
+   cover prose or change the prose's line wrapping. */
+span.va-annotation-rail.va-editor-rail,
+span.va-annotation-rail.va-reading-rail {
+  display: block;
   box-sizing: border-box;
   width: 100%;
   min-height: 4.65rem;
@@ -114,7 +113,7 @@
   transform: none;
 }
 
-.va-rail-arrow {
+.va-annotation-rail .va-rail-arrow {
   display: block;
   width: 46px;
   height: var(--va-arrow-length, 38px);
@@ -130,7 +129,7 @@
   mask-size: 100% 100%;
   mask-image: url("data:image/svg+xml,%3Csvg width='46' height='38' viewBox='0 0 46 38' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M23 4 C22 13 22 24 23 35' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Cpath d='M17 29 L23 36 L29 29' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   justify-self: center;
-  margin: -0.1rem 0 0 !important;
+  margin: -0.1rem 0 0;
   transform: translateX(var(--va-arrow-shift, 0));
   pointer-events: none;
 }
@@ -151,9 +150,9 @@
   grid-row: 2;
 }
 
-.va-side-bottom .va-rail-arrow {
+.va-annotation-rail.va-side-bottom .va-rail-arrow {
   grid-row: 1;
-  margin: 0 0 -0.1rem !important;
+  margin: 0 0 -0.1rem;
   transform: translateX(var(--va-arrow-shift, 0)) rotate(180deg);
 }
 
@@ -172,7 +171,7 @@
   line-height: 1;
 }
 
-button.va-rail-note {
+.va-annotation-rail button.va-rail-note {
   appearance: none;
   position: relative;
   left: var(--va-marker-x, 50%);
@@ -186,13 +185,13 @@ button.va-rail-note {
   max-width: min(30rem, 100%);
   height: auto;
   min-height: 4.25rem;
-  margin: 0 !important;
+  margin: 0;
   padding: 0;
-  border: 0 !important;
+  border: 0;
   border-radius: 0;
-  color: var(--va-color) !important;
-  background: transparent !important;
-  box-shadow: none !important;
+  color: var(--va-color);
+  background: transparent;
+  box-shadow: none;
   line-height: 1;
   white-space: normal;
   transform: translate(-50%, var(--va-connector-offset, 0px));
@@ -214,17 +213,16 @@ button.va-rail-note {
   opacity: 0.94;
   transform: rotate(var(--va-rotate, -3deg));
   transform-origin: 50% 70%;
+  transition: opacity 120ms ease, transform 120ms ease;
 }
 
-.va-rail-note:hover .va-rail-note-text,
-.va-rail-note:focus .va-rail-note-text {
+.va-annotation-rail button.va-rail-note:hover .va-rail-note-text,
+.va-annotation-rail button.va-rail-note:focus .va-rail-note-text {
   color: var(--va-color);
-  background: transparent !important;
-  box-shadow: none !important;
-  text-decoration-line: underline;
-  text-decoration-style: wavy;
-  text-decoration-color: color-mix(in srgb, var(--va-color) 55%, transparent);
-  text-underline-offset: 0.28rem;
+  background: transparent;
+  box-shadow: none;
+  opacity: 1;
+  transform: rotate(var(--va-rotate, -3deg)) scale(1.02);
 }
 
 .va-rail-actions {
