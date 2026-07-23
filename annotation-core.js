@@ -98,15 +98,17 @@ function distributeAnnotations(annotations) {
       Number(a.anchorRatio ?? 0.5) - Number(b.anchorRatio ?? 0.5) ||
       Number(a.start ?? 0) - Number(b.start ?? 0)
   );
-  const automatic = ordered.filter(
+  const unmeasuredAutomatic = ordered.filter(
     (annotation) =>
       annotation.placement !== "top" &&
       annotation.placement !== "left" &&
       annotation.placement !== "bottom" &&
-      annotation.placement !== "right"
+      annotation.placement !== "right" &&
+      annotation.preferredSide !== "top" &&
+      annotation.preferredSide !== "bottom"
   );
-  const topAutomaticCount = Math.ceil(automatic.length / 2);
-  let automaticIndex = 0;
+  const topUnmeasuredCount = Math.ceil(unmeasuredAutomatic.length / 2);
+  let unmeasuredIndex = 0;
 
   for (const annotation of ordered) {
     let side;
@@ -114,9 +116,11 @@ function distributeAnnotations(annotations) {
       side = "top";
     } else if (annotation.placement === "bottom" || annotation.placement === "right") {
       side = "bottom";
+    } else if (annotation.preferredSide === "top" || annotation.preferredSide === "bottom") {
+      side = annotation.preferredSide;
     } else {
-      side = automaticIndex < topAutomaticCount ? "top" : "bottom";
-      automaticIndex += 1;
+      side = unmeasuredIndex < topUnmeasuredCount ? "top" : "bottom";
+      unmeasuredIndex += 1;
     }
     distributed[side].push(annotation);
   }

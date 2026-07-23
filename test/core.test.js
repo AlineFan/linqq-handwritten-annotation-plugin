@@ -25,6 +25,19 @@ const explicitPlacement = distributeAnnotations([
 assert.deepEqual(explicitPlacement.top.map(({ id }) => id), ["early-auto"]);
 assert.deepEqual(explicitPlacement.bottom.map(({ id }) => id), ["forced-bottom", "late-auto"]);
 
+const sameFirstLine = distributeAnnotations([
+  { id: "note-1", placement: "auto", preferredSide: "top", anchorRatio: 0.25 },
+  { id: "note-2", placement: "auto", preferredSide: "top", anchorRatio: 0.72 }
+]);
+assert.deepEqual(sameFirstLine.top.map(({ id }) => id), ["note-1", "note-2"]);
+assert.deepEqual(sameFirstLine.bottom.map(({ id }) => id), []);
+
+const finalLine = distributeAnnotations([
+  { id: "final-line-note", placement: "auto", preferredSide: "bottom", anchorRatio: 0.76 }
+]);
+assert.deepEqual(finalLine.top.map(({ id }) => id), []);
+assert.deepEqual(finalLine.bottom.map(({ id }) => id), ["final-line-note"]);
+
 const wrapped = buildAnnotation("13 条高价值内容", '最终筛选 "A"', "blue", "top");
 assert.equal(
   wrapped,
