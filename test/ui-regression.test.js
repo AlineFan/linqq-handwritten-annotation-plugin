@@ -12,7 +12,7 @@ const manifest = JSON.parse(
 
 assert.equal(manifest.name, "linqq-handwritten annotation");
 assert.equal(manifest.id, "visual-annotations");
-assert.equal(manifest.version, "0.6.11");
+assert.equal(manifest.version, "0.6.12");
 assert.equal(manifest.description, "Add colorful handwritten-style annotations.");
 assert.doesNotMatch(main, /linqq-handwritten annotation 设置/);
 assert.doesNotMatch(main, /containerEl\.createEl\("h[1-6]"/);
