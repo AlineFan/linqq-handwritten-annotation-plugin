@@ -59,9 +59,9 @@ const MESSAGES = {
     },
     actions: {
       add: "Add annotation",
-      edit: "Edit annotation",
+      edit: "Edit",
       editSelected: "Edit selected annotation",
-      remove: "Delete annotation",
+      remove: "Delete",
       removeKeepText: "Delete annotation (keep text)",
       removeSelectedKeepText: "Delete selected annotation (keep text)"
     },
@@ -116,9 +116,9 @@ const MESSAGES = {
     },
     actions: {
       add: "添加批注",
-      edit: "编辑批注",
+      edit: "编辑",
       editSelected: "编辑所选批注",
-      remove: "删除批注",
+      remove: "删除",
       removeKeepText: "删除批注（保留正文）",
       removeSelectedKeepText: "删除所选批注（保留正文）"
     },

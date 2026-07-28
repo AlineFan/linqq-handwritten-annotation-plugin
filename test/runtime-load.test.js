@@ -116,6 +116,8 @@ async function run() {
     );
     assert.equal(plugin.t("modal.addTitle"), "Add annotation");
     assert.equal(plugin.t("colors.green"), "Green");
+    assert.equal(plugin.t("actions.edit"), "Edit");
+    assert.equal(plugin.t("actions.remove"), "Delete");
 
     interfaceLanguage = "zh-CN";
     const chinesePlugin = new PluginClass(app);
@@ -126,6 +128,8 @@ async function run() {
     );
     assert.equal(chinesePlugin.t("modal.addTitle"), "添加批注");
     assert.equal(chinesePlugin.t("colors.green"), "绿色");
+    assert.equal(chinesePlugin.t("actions.edit"), "编辑");
+    assert.equal(chinesePlugin.t("actions.remove"), "删除");
     assert.equal(
       chinesePlugin.t("accessibility.target", { text: "测试正文" }),
       "批注对象：测试正文"
