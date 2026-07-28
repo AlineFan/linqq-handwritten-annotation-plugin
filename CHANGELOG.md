@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add complete English and Chinese interface text for the annotation modal, commands, ribbon, context menus, rail actions, notices, and settings.
+- Follow Obsidian's saved interface language automatically, with English as the fallback.
+- Keep the Markdown annotation format and existing annotation data unchanged.
+
 ## 0.6.11 - 2026-07-23
 
 - Remove CSS features that the Obsidian review linter only partially supports.

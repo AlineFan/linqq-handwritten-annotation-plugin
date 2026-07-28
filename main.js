@@ -26,13 +26,156 @@ const ANNOTATION_SOURCE =
 
 const DEFAULT_SETTINGS = { defaultColor: "blue" };
 
-const COLOR_LABELS = {
-  amber: "橙色",
-  blue: "蓝色",
-  green: "绿色",
-  red: "红色",
-  purple: "紫色"
+const MESSAGES = {
+  en: {
+    modal: {
+      addTitle: "Add annotation",
+      editTitle: "Edit annotation",
+      noteLabel: "Annotation text",
+      notePlaceholder: "Enter an annotation, for example: Key conclusion",
+      colorLabel: "Color",
+      targetLabel: "Selected text",
+      positionHint:
+        "The annotation appears in a separate rail outside the prose and does not cover it.",
+      cancel: "Cancel",
+      add: "Add",
+      save: "Save"
+    },
+    colors: {
+      amber: "Amber",
+      blue: "Blue",
+      green: "Green",
+      red: "Red",
+      purple: "Purple"
+    },
+    settings: {
+      defaultColor: "Default color",
+      defaultColorDescription: "Color selected by default when adding an annotation"
+    },
+    commands: {
+      add: "Add a handwritten annotation to selected text",
+      edit: "Edit the annotation at the selection or cursor",
+      remove: "Remove the annotation at the selection or cursor (keep text)"
+    },
+    actions: {
+      add: "Add annotation",
+      edit: "Edit annotation",
+      editSelected: "Edit selected annotation",
+      remove: "Delete annotation",
+      removeKeepText: "Delete annotation (keep text)",
+      removeSelectedKeepText: "Delete selected annotation (keep text)"
+    },
+    notices: {
+      enterNote: "Enter annotation text",
+      openMarkdown: "Open a Markdown note first",
+      selectText: "Select the text you want to annotate first",
+      alreadyAnnotated: "The selected text already has an annotation. Use edit or delete instead.",
+      singleLineOnly: "Annotations currently support single-line selections only",
+      incompatibleSelection: "The selection already contains an annotation or incompatible HTML",
+      whitespaceOnly: "The selection cannot contain only spaces",
+      added: "Annotation added",
+      updated: "Annotation updated",
+      removed: "Annotation deleted; the original text was kept",
+      fileNotFound: "The note containing this annotation could not be found",
+      annotationNotFound: "The selected annotation could not be found. Reopen the note and try again.",
+      annotationChanged: "The annotation has changed. Select it again."
+    },
+    accessibility: {
+      rail: "Handwritten annotation rail",
+      target: "Annotated text: {text}"
+    }
+  },
+  zh: {
+    modal: {
+      addTitle: "添加批注",
+      editTitle: "编辑批注",
+      noteLabel: "批注文字",
+      notePlaceholder: "输入批注，例如：核心结论",
+      colorLabel: "颜色",
+      targetLabel: "批注对象",
+      positionHint: "批注会显示在正文外的独立批注栏，不会遮住正文。",
+      cancel: "取消",
+      add: "添加",
+      save: "保存"
+    },
+    colors: {
+      amber: "橙色",
+      blue: "蓝色",
+      green: "绿色",
+      red: "红色",
+      purple: "紫色"
+    },
+    settings: {
+      defaultColor: "默认颜色",
+      defaultColorDescription: "添加批注时预先选中的颜色"
+    },
+    commands: {
+      add: "为所选文字添加手写批注",
+      edit: "编辑所选或光标处的批注",
+      remove: "删除所选或光标处的批注（保留正文）"
+    },
+    actions: {
+      add: "添加批注",
+      edit: "编辑批注",
+      editSelected: "编辑所选批注",
+      remove: "删除批注",
+      removeKeepText: "删除批注（保留正文）",
+      removeSelectedKeepText: "删除所选批注（保留正文）"
+    },
+    notices: {
+      enterNote: "请输入批注文字",
+      openMarkdown: "请先打开 Markdown 文档",
+      selectText: "请先选中要批注的文字",
+      alreadyAnnotated: "所选文字已经有批注；请使用编辑或删除",
+      singleLineOnly: "目前仅支持单行文字批注",
+      incompatibleSelection: "选区已经包含批注或不兼容的 HTML",
+      whitespaceOnly: "选区不能只包含空格",
+      added: "批注已添加",
+      updated: "批注已更新",
+      removed: "批注已删除，正文已保留",
+      fileNotFound: "找不到批注所在文档",
+      annotationNotFound: "找不到所选批注，请重新打开文档后再试",
+      annotationChanged: "批注已发生变化，请重新选择"
+    },
+    accessibility: {
+      rail: "手写批注栏",
+      target: "批注对象：{text}"
+    }
+  }
 };
+
+function normalizeLocale(locale) {
+  return /^zh(?:[-_]|$)/i.test(String(locale || "")) ? "zh" : "en";
+}
+
+function detectLocale() {
+  let storedLocale = "";
+  try {
+    storedLocale =
+      typeof window !== "undefined" && window.localStorage
+        ? window.localStorage.getItem("language") || ""
+        : "";
+  } catch (_error) {
+    storedLocale = "";
+  }
+  const browserLocale =
+    typeof navigator !== "undefined" && navigator.language ? navigator.language : "";
+  return normalizeLocale(storedLocale || browserLocale);
+}
+
+function getMessage(locale, key, variables = {}) {
+  const read = (catalog) =>
+    key
+      .split(".")
+      .reduce(
+        (value, part) => (value && value[part] !== undefined ? value[part] : null),
+        catalog
+      );
+  const message = read(MESSAGES[locale]) ?? read(MESSAGES.en) ?? key;
+  return String(message).replace(/\{(\w+)\}/g, (_match, name) =>
+    variables[name] === undefined ? `{${name}}` : String(variables[name])
+  );
+}
 
 function annotationRegex() {
   return new RegExp(ANNOTATION_SOURCE, "g");
@@ -328,8 +471,9 @@ function createEditorRailExtension(plugin) {
 }
 
 class AnnotationModal extends Modal {
-  constructor(app, initial, onSubmit) {
+  constructor(app, plugin, initial, onSubmit) {
     super(app);
+    this.plugin = plugin;
     this.state = { ...initial };
     this.onSubmit = onSubmit;
     this.colorButtons = new Map();
@@ -341,17 +485,20 @@ class AnnotationModal extends Modal {
     contentEl.empty();
     contentEl.addClass("va-modal");
     contentEl.createEl("h2", {
-      text: this.state.editing ? "编辑批注" : "添加批注"
+      text: this.plugin.t(this.state.editing ? "modal.editTitle" : "modal.addTitle")
     });
 
     const field = contentEl.createDiv({ cls: "va-note-field" });
-    field.createEl("label", { text: "批注文字", attr: { for: "va-note-input" } });
+    field.createEl("label", {
+      text: this.plugin.t("modal.noteLabel"),
+      attr: { for: "va-note-input" }
+    });
     const input = field.createEl("textarea", {
       cls: "va-note-input",
       attr: {
         id: "va-note-input",
         rows: "3",
-        placeholder: "输入批注，例如：核心结论",
+        placeholder: this.plugin.t("modal.notePlaceholder"),
         autocomplete: "off",
         spellcheck: "false"
       }
@@ -362,15 +509,19 @@ class AnnotationModal extends Modal {
     });
 
     const colorSection = contentEl.createDiv({ cls: "va-color-section" });
-    colorSection.createDiv({ cls: "va-field-label", text: "颜色" });
+    colorSection.createDiv({
+      cls: "va-field-label",
+      text: this.plugin.t("modal.colorLabel")
+    });
     const palette = colorSection.createDiv({ cls: "va-color-palette" });
     for (const color of COLORS) {
+      const colorLabel = this.plugin.t(`colors.${color}`);
       const button = palette.createEl("button", {
         cls: `va-color-choice va-color-${color}`,
         attr: {
           type: "button",
-          "aria-label": COLOR_LABELS[color],
-          title: COLOR_LABELS[color]
+          "aria-label": colorLabel,
+          title: colorLabel
         }
       });
       button.createSpan({ cls: "va-color-swatch" });
@@ -385,29 +536,32 @@ class AnnotationModal extends Modal {
     const selectedText = this.state.text || "";
     const excerpt = selectedText.length > 42 ? `${selectedText.slice(0, 42)}…` : selectedText;
     const target = contentEl.createDiv({ cls: "va-selected-text" });
-    target.createSpan({ cls: "va-selected-text-label", text: "批注对象" });
+    target.createSpan({
+      cls: "va-selected-text-label",
+      text: this.plugin.t("modal.targetLabel")
+    });
     target.createSpan({ cls: "va-selected-text-value", text: excerpt });
 
     contentEl.createDiv({
       cls: "va-auto-position-hint",
-      text: "批注会显示在正文上方的独立批注栏，不会遮住正文。"
+      text: this.plugin.t("modal.positionHint")
     });
 
     const actions = contentEl.createDiv({ cls: "va-modal-actions" });
     const cancel = actions.createEl("button", {
-      text: "取消",
+      text: this.plugin.t("modal.cancel"),
       attr: { type: "button" }
     });
     cancel.addEventListener("click", () => this.close());
     const submit = actions.createEl("button", {
       cls: "mod-cta",
-      text: this.state.editing ? "保存" : "添加",
+      text: this.plugin.t(this.state.editing ? "modal.save" : "modal.add"),
       attr: { type: "button" }
     });
     const submitForm = () => {
       const note = (this.state.note || "").trim();
       if (!note) {
-        new Notice("请输入批注文字");
+        new Notice(this.plugin.t("notices.enterNote"));
         input.focus();
         return;
       }
@@ -451,10 +605,12 @@ class VisualAnnotationsSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("默认颜色")
-      .setDesc("添加批注时预先选中的颜色")
+      .setName(this.plugin.t("settings.defaultColor"))
+      .setDesc(this.plugin.t("settings.defaultColorDescription"))
       .addDropdown((dropdown) => {
-        for (const color of COLORS) dropdown.addOption(color, COLOR_LABELS[color]);
+        for (const color of COLORS) {
+          dropdown.addOption(color, this.plugin.t(`colors.${color}`));
+        }
         dropdown.setValue(this.plugin.settings.defaultColor).onChange(async (value) => {
           this.plugin.settings.defaultColor = value;
           await this.plugin.saveSettings();
@@ -465,12 +621,13 @@ class VisualAnnotationsSettingTab extends PluginSettingTab {
 
 module.exports = class VisualAnnotationsPlugin extends Plugin {
   async onload() {
+    this.locale = detectLocale();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     this.registerEditorExtension(createEditorRailExtension(this));
 
     this.addCommand({
       id: "add-visual-annotation",
-      name: "为所选文字添加视觉批注",
+      name: this.t("commands.add"),
       editorCheckCallback: (checking, editor) => {
         const selection = editor.getSelection();
         if (!selection || this.getActiveAnnotation(editor)) return false;
@@ -481,7 +638,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
 
     this.addCommand({
       id: "edit-visual-annotation",
-      name: "编辑所选或光标处的视觉批注",
+      name: this.t("commands.edit"),
       editorCheckCallback: (checking, editor) => {
         const annotation = this.getActiveAnnotation(editor);
         if (!annotation) return false;
@@ -492,7 +649,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
 
     this.addCommand({
       id: "remove-visual-annotation",
-      name: "删除所选或光标处的视觉批注（保留正文）",
+      name: this.t("commands.remove"),
       editorCheckCallback: (checking, editor) => {
         const annotation = this.getActiveAnnotation(editor);
         if (!annotation) return false;
@@ -501,18 +658,18 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
       }
     });
 
-    this.addRibbonIcon("message-square-plus", "添加视觉批注", () => {
+    this.addRibbonIcon("message-square-plus", this.t("actions.add"), () => {
       const view = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!view) {
-        new Notice("请先打开 Markdown 文档");
+        new Notice(this.t("notices.openMarkdown"));
         return;
       }
       if (!view.editor.getSelection()) {
-        new Notice("请先选中要批注的文字");
+        new Notice(this.t("notices.selectText"));
         return;
       }
       if (this.getActiveAnnotation(view.editor)) {
-        new Notice("所选文字已经有批注；请使用编辑或删除");
+        new Notice(this.t("notices.alreadyAnnotated"));
         return;
       }
       this.addAnnotation(view.editor);
@@ -524,20 +681,20 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
         if (annotation) {
           menu.addItem((item) =>
             item
-              .setTitle("编辑所选批注")
+              .setTitle(this.t("actions.editSelected"))
               .setIcon("pencil")
               .onClick(() => this.editAnnotation(editor, annotation))
           );
           menu.addItem((item) =>
             item
-              .setTitle("删除所选批注（保留正文）")
+              .setTitle(this.t("actions.removeSelectedKeepText"))
               .setIcon("eraser")
               .onClick(() => this.removeAnnotation(editor, annotation))
           );
         } else if (editor.getSelection()) {
           menu.addItem((item) =>
             item
-              .setTitle("添加视觉批注")
+              .setTitle(this.t("actions.add"))
               .setIcon("message-square-plus")
               .onClick(() => this.addAnnotation(editor))
           );
@@ -556,6 +713,10 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
+  t(key, variables = {}) {
+    return getMessage(this.locale || "en", key, variables);
+  }
+
   getActiveAnnotation(editor) {
     const source = editor.getValue();
     const from = editor.posToOffset(editor.getCursor("from"));
@@ -567,15 +728,15 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
   addAnnotation(editor) {
     const selected = editor.getSelection();
     if (!selected) {
-      new Notice("请先选中要批注的文字");
+      new Notice(this.t("notices.selectText"));
       return;
     }
     if (/\r|\n/.test(selected)) {
-      new Notice("目前仅支持单行文字批注");
+      new Notice(this.t("notices.singleLineOnly"));
       return;
     }
     if (selected.includes('<span class="va-annotation') || selected.includes("</span>")) {
-      new Notice("选区已经包含批注或不兼容的 HTML");
+      new Notice(this.t("notices.incompatibleSelection"));
       return;
     }
 
@@ -583,12 +744,13 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
     const trailing = selected.match(/\s*$/)[0];
     const text = selected.slice(leading.length, selected.length - trailing.length);
     if (!text) {
-      new Notice("选区不能只包含空格");
+      new Notice(this.t("notices.whitespaceOnly"));
       return;
     }
 
     new AnnotationModal(
       this.app,
+      this,
       {
         editing: false,
         text,
@@ -600,7 +762,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
         const replacement =
           leading + buildAnnotation(text, note, color, "auto", createAnnotationId()) + trailing;
         editor.replaceSelection(replacement);
-        new Notice("视觉批注已添加");
+        new Notice(this.t("notices.added"));
       }
     ).open();
   }
@@ -608,6 +770,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
   editAnnotation(editor, annotation) {
     new AnnotationModal(
       this.app,
+      this,
       {
         editing: true,
         text: annotation.text,
@@ -630,7 +793,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
         const start = editor.offsetToPos(annotation.start);
         const end = editor.offsetToPos(annotation.start + replacement.length);
         editor.setSelection(start, end);
-        new Notice("视觉批注已更新");
+        new Notice(this.t("notices.updated"));
       }
     ).open();
   }
@@ -642,7 +805,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
     const start = editor.offsetToPos(annotation.start);
     const end = editor.offsetToPos(annotation.start + annotation.text.length);
     editor.setSelection(start, end);
-    new Notice("批注已删除，正文已保留");
+    new Notice(this.t("notices.removed"));
   }
 
   renderAnnotations(element, context) {
@@ -747,7 +910,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
     rail.className = `va-annotation-rail va-${mode}-rail va-side-${placement}`;
     rail.dataset.vaPlacement = placement;
     rail.setAttribute("contenteditable", "false");
-    rail.setAttribute("aria-label", "视觉批注栏");
+    rail.setAttribute("aria-label", this.t("accessibility.rail"));
 
     annotations.forEach((annotation, index) => {
       const item = doc.createElement("span");
@@ -763,7 +926,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
       const noteButton = doc.createElement("button");
       noteButton.className = "va-rail-note";
       noteButton.type = "button";
-      noteButton.title = `批注对象：${annotation.text}`;
+      noteButton.title = this.t("accessibility.target", { text: annotation.text });
 
       const noteText = doc.createElement("span");
       noteText.className = "va-rail-note-text";
@@ -779,11 +942,11 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
       const edit = doc.createElement("button");
       edit.className = "va-rail-action";
       edit.type = "button";
-      edit.textContent = "编辑";
+      edit.textContent = this.t("actions.edit");
       const remove = doc.createElement("button");
       remove.className = "va-rail-action va-rail-delete";
       remove.type = "button";
-      remove.textContent = "删除";
+      remove.textContent = this.t("actions.remove");
       actions.append(edit, remove);
       item.append(noteButton, actions);
       rail.append(item);
@@ -971,13 +1134,13 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
     const menu = new Menu();
     menu.addItem((item) =>
       item
-        .setTitle("编辑批注")
+        .setTitle(this.t("actions.edit"))
         .setIcon("pencil")
         .onClick(() => this.editRenderedAnnotation(sourcePath, identity, selectionDoc))
     );
     menu.addItem((item) =>
       item
-        .setTitle("删除批注（保留正文）")
+        .setTitle(this.t("actions.removeKeepText"))
         .setIcon("eraser")
         .onClick(() => this.removeRenderedAnnotation(sourcePath, identity))
     );
@@ -987,18 +1150,19 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
   async editRenderedAnnotation(sourcePath, identity, selectionDoc = null) {
     const file = this.app.vault.getAbstractFileByPath(sourcePath);
     if (!file) {
-      new Notice("找不到批注所在文档");
+      new Notice(this.t("notices.fileNotFound"));
       return;
     }
     const source = await this.app.vault.read(file);
     const annotation = findAnnotationByIdentity(source, identity);
     if (!annotation) {
-      new Notice("找不到所选批注，请重新打开文档后再试");
+      new Notice(this.t("notices.annotationNotFound"));
       return;
     }
 
     new AnnotationModal(
       this.app,
+      this,
       {
         editing: true,
         text: annotation.text,
@@ -1024,7 +1188,9 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
             currentSource.slice(0, current.start) + replacement + currentSource.slice(current.end)
           );
         });
-        new Notice(changed ? "视觉批注已更新" : "批注已发生变化，请重新选择");
+        new Notice(
+          this.t(changed ? "notices.updated" : "notices.annotationChanged")
+        );
       }
     ).open();
   }
@@ -1032,7 +1198,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
   async removeRenderedAnnotation(sourcePath, identity) {
     const file = this.app.vault.getAbstractFileByPath(sourcePath);
     if (!file) {
-      new Notice("找不到批注所在文档");
+      new Notice(this.t("notices.fileNotFound"));
       return;
     }
     let changed = false;
@@ -1042,6 +1208,8 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
       changed = true;
       return source.slice(0, annotation.start) + annotation.text + source.slice(annotation.end);
     });
-    new Notice(changed ? "批注已删除，正文已保留" : "批注已发生变化，请重新选择");
+    new Notice(
+      this.t(changed ? "notices.removed" : "notices.annotationChanged")
+    );
   }
 };

@@ -78,11 +78,17 @@ Module._load = function (request, parent, isMain) {
 
 async function run() {
   try {
+    let interfaceLanguage = "en";
     global.window = {
       innerWidth: 1200,
       setTimeout() { return 1; },
       clearTimeout() {},
-      requestAnimationFrame() {}
+      requestAnimationFrame() {},
+      localStorage: {
+        getItem(key) {
+          return key === "language" ? interfaceLanguage : null;
+        }
+      }
     };
     const PluginClass = require("../main.js");
     const app = {
@@ -97,6 +103,30 @@ async function run() {
     await plugin.onload();
     assert.equal(plugin.commands.length, 3);
     assert.equal(plugin.editorExtensions.length, 1);
+    assert.deepEqual(
+      plugin.commands.map(({ name }) => name),
+      [
+        "Add a handwritten annotation to selected text",
+        "Edit the annotation at the selection or cursor",
+        "Remove the annotation at the selection or cursor (keep text)"
+      ]
+    );
+    assert.equal(plugin.t("modal.addTitle"), "Add annotation");
+    assert.equal(plugin.t("colors.green"), "Green");
+
+    interfaceLanguage = "zh-CN";
+    const chinesePlugin = new PluginClass(app);
+    await chinesePlugin.onload();
+    assert.deepEqual(
+      chinesePlugin.commands.map(({ name }) => name),
+      ["为所选文字添加手写批注", "编辑所选或光标处的批注", "删除所选或光标处的批注（保留正文）"]
+    );
+    assert.equal(chinesePlugin.t("modal.addTitle"), "添加批注");
+    assert.equal(chinesePlugin.t("colors.green"), "绿色");
+    assert.equal(
+      chinesePlugin.t("accessibility.target", { text: "测试正文" }),
+      "批注对象：测试正文"
+    );
 
     const containerRect = { left: 100, top: 200, right: 900, bottom: 260, width: 800, height: 60 };
     const firstLineMetrics = plugin.measureRenderedTarget(

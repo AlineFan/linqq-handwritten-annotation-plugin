@@ -16,12 +16,13 @@ The plugin places handwritten labels in dedicated layout rails above and below a
 - Keep arrows connected to their rendered text targets.
 - Wrap long annotation text instead of truncating it.
 - Use Shantell Sans for Latin text and LXGW WenKai Lite for Chinese text.
+- Follow Obsidian's interface language with complete English and Chinese controls.
 
 ## Usage
 
 1. Select text in an Obsidian note.
-2. Run **为所选文字添加视觉批注** from the command palette, ribbon, or editor context menu.
-3. Enter the annotation, choose a color, and select **添加**.
+2. Run **Add a handwritten annotation to selected text** / **为所选文字添加手写批注** from the command palette, ribbon, or editor context menu.
+3. Enter the annotation, choose a color, and select **Add** / **添加**.
 4. Select a handwritten label to reveal its edit and delete actions.
 
 The annotation remains in the Markdown file as portable HTML:
