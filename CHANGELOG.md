@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+## 0.6.12 - 2026-07-28
+
 - Add complete English and Chinese interface text for the annotation modal, commands, ribbon, context menus, rail actions, notices, and settings.
 - Follow Obsidian's saved interface language automatically, with English as the fallback.
 - Keep the Markdown annotation format and existing annotation data unchanged.
+- Restore handwritten annotations and their edit/delete controls in Reading view.
+- Hide annotation action buttons when clicking outside the annotation or pressing Escape.
+- Shorten the visible action labels to `Edit`/`Delete` and `编辑`/`删除`.
 
 ## 0.6.11 - 2026-07-23
 
