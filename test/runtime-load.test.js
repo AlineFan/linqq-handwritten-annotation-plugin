@@ -7,6 +7,7 @@ class Plugin {
   constructor(app) {
     this.app = app;
     this.commands = [];
+    this.domEvents = [];
     this.editorExtensions = [];
   }
   async loadData() { return {}; }
@@ -14,7 +15,9 @@ class Plugin {
   addCommand(command) { this.commands.push(command); }
   addRibbonIcon() {}
   registerEvent() {}
-  registerDomEvent() {}
+  registerDomEvent(target, type, handler) {
+    this.domEvents.push({ target, type, handler });
+  }
   registerEditorExtension(extension) { this.editorExtensions.push(extension); }
   registerMarkdownPostProcessor() {}
   addSettingTab() {}
@@ -322,6 +325,73 @@ async function run() {
     plugin.layoutAnnotationRail(positionedRail);
     assert.equal(positionedStyles.get("--va-marker-x"), "650px");
     assert.equal(positionedStyles.get("--va-arrow-shift"), "150px");
+
+    const scheduledFrames = [];
+    const insertedRails = [];
+    const readingView = {
+      requestAnimationFrame(callback) {
+        scheduledFrames.push(callback);
+      }
+    };
+    const readingContainer = {
+      isConnected: false,
+      children: [],
+      ownerDocument: { defaultView: readingView },
+      getBoundingClientRect() {
+        return { left: 100, top: 200, right: 900, bottom: 240, width: 800, height: 40 };
+      },
+      prepend(rail) {
+        insertedRails.push(["top", rail]);
+      },
+      append(rail) {
+        insertedRails.push(["bottom", rail]);
+      }
+    };
+    const readingAnnotation = {
+      textContent: "正文",
+      classList: {
+        contains(value) {
+          return value === "va-color-blue" || value === "va-place-auto";
+        }
+      },
+      getAttribute(name) {
+        return {
+          "data-va-id": "va-reading-test",
+          "data-va-note": "阅读批注"
+        }[name] || "";
+      }
+    };
+    plugin.measureRenderedTarget = () => ({
+      anchorRatio: 0.4,
+      preferredSide: "top"
+    });
+    plugin.createAnnotationRail = (annotations, sourcePath, doc, mode, placement) => ({
+      annotations,
+      sourcePath,
+      doc,
+      mode,
+      placement
+    });
+    plugin.scheduleRenderedAnnotationRails(
+      readingContainer,
+      [readingAnnotation],
+      "reading.md"
+    );
+    assert.equal(scheduledFrames.length, 1);
+    scheduledFrames.shift()();
+    assert.equal(insertedRails.length, 0);
+    assert.equal(
+      scheduledFrames.length,
+      1,
+      "detached reading containers should be retried instead of abandoned"
+    );
+    readingContainer.isConnected = true;
+    scheduledFrames.shift()();
+    assert.equal(insertedRails.length, 1);
+    assert.equal(insertedRails[0][0], "top");
+    assert.equal(insertedRails[0][1].annotations[0].note, "阅读批注");
+    assert.equal(insertedRails[0][1].mode, "reading");
+
     assert.deepEqual(
       plugin.commands.map((command) => command.id),
       [
@@ -349,6 +419,58 @@ async function run() {
     });
     assert.deepEqual(removed, ["annotation:is-selected", "rail:is-selected"]);
     assert.deepEqual(aria, [["aria-selected", "false"]]);
+
+    let dismissalCount = 0;
+    const dismissalDoc = {
+      addEventListener() {},
+      querySelectorAll(selector) {
+        if (
+          selector === ".va-annotation.is-selected" ||
+          selector === ".va-rail-item.is-selected"
+        ) {
+          return [
+            {
+              classList: {
+                remove() {
+                  dismissalCount += 1;
+                }
+              },
+              setAttribute() {}
+            }
+          ];
+        }
+        return [];
+      }
+    };
+    plugin.ensureSelectionDismissalHandlers(dismissalDoc);
+    plugin.ensureSelectionDismissalHandlers(dismissalDoc);
+    const dismissalEvents = plugin.domEvents.filter(({ target }) => target === dismissalDoc);
+    assert.deepEqual(
+      dismissalEvents.map(({ type }) => type),
+      ["click", "keydown"],
+      "each document should receive one dismissal handler pair"
+    );
+
+    const clickDismissal = dismissalEvents.find(({ type }) => type === "click").handler;
+    const keyDismissal = dismissalEvents.find(({ type }) => type === "keydown").handler;
+    clickDismissal({
+      target: {
+        closest(selector) {
+          assert.equal(selector, ".va-annotation, .va-rail-item");
+          return {};
+        }
+      }
+    });
+    assert.equal(dismissalCount, 0, "annotation controls should keep the selection open");
+
+    clickDismissal({ target: { closest() { return null; } } });
+    assert.equal(dismissalCount, 2, "clicking outside should clear target and rail selection");
+
+    keyDismissal({ key: "Enter" });
+    assert.equal(dismissalCount, 2, "unrelated keys should keep the selection open");
+    keyDismissal({ key: "Escape" });
+    assert.equal(dismissalCount, 4, "Escape should clear target and rail selection");
+
     console.log("PASS bundled plugin runtime load test");
   } finally {
     delete global.window;

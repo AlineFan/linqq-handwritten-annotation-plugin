@@ -623,6 +623,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
   async onload() {
     this.locale = detectLocale();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.selectionDismissalDocuments = new WeakSet();
     this.registerEditorExtension(createEditorRailExtension(this));
 
     this.addCommand({
@@ -811,6 +812,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
   renderAnnotations(element, context) {
     const annotations = Array.from(element.querySelectorAll(".va-annotation"));
     if (!annotations.length) return;
+    this.ensureSelectionDismissalHandlers(element.ownerDocument);
 
     const grouped = new Map();
     for (const annotation of annotations) {
@@ -848,8 +850,21 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
   scheduleRenderedAnnotationRails(container, items, sourcePath) {
     const doc = container.ownerDocument;
     const view = doc.defaultView;
+    const maxMountAttempts = 12;
+    let mountAttempt = 0;
+    const schedule = (callback) => {
+      if (view && typeof view.requestAnimationFrame === "function") {
+        view.requestAnimationFrame(callback);
+      } else {
+        setTimeout(callback, 0);
+      }
+    };
     const render = () => {
-      if (container.isConnected === false) return;
+      if (container.isConnected === false) {
+        mountAttempt += 1;
+        if (mountAttempt < maxMountAttempts) schedule(render);
+        return;
+      }
       Array.from(container.children || [])
         .filter((child) => child.classList.contains("va-reading-rail"))
         .forEach((rail) => rail.remove());
@@ -873,11 +888,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
       }
     };
 
-    if (view && typeof view.requestAnimationFrame === "function") {
-      view.requestAnimationFrame(render);
-    } else {
-      setTimeout(render, 0);
-    }
+    schedule(render);
   }
 
   measureRenderedTarget(annotation, containerRect) {
@@ -906,6 +917,7 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
   }
 
   createAnnotationRail(annotations, sourcePath, doc, mode, placement = "top") {
+    this.ensureSelectionDismissalHandlers(doc);
     const rail = doc.createElement("span");
     rail.className = `va-annotation-rail va-${mode}-rail va-side-${placement}`;
     rail.dataset.vaPlacement = placement;
@@ -1116,6 +1128,30 @@ module.exports = class VisualAnnotationsPlugin extends Plugin {
         item.dataset.vaNote === identity.note &&
         item.dataset.vaText === identity.text;
       if (idMatches || legacyMatches) item.classList.add("is-selected");
+    });
+  }
+
+  ensureSelectionDismissalHandlers(doc) {
+    if (
+      !doc ||
+      typeof doc.addEventListener !== "function" ||
+      this.selectionDismissalDocuments.has(doc)
+    ) {
+      return;
+    }
+    this.selectionDismissalDocuments.add(doc);
+    this.registerDomEvent(doc, "click", (event) => {
+      const target = event.target;
+      const isAnnotationControl =
+        target &&
+        typeof target.closest === "function" &&
+        target.closest(".va-annotation, .va-rail-item");
+      if (!isAnnotationControl) this.clearRenderedSelection(doc);
+    });
+    this.registerDomEvent(doc, "keydown", (event) => {
+      if (event.key === "Escape" || event.key === "Esc") {
+        this.clearRenderedSelection(doc);
+      }
     });
   }
 
